@@ -33,7 +33,7 @@ public class SchedulerService {
 
     List<String> currentScheduledList = runtimeDataStore.getData("scheduled");
 
-    @Scheduled(cron = "* */5 * * * *") // Cron expression for running every 5 minutes
+    @Scheduled(cron = "0 */5 * * * *") // Cron expression for running every 5 minutes
     public void callApis() {
         String nyepApiUrl = "https://nyep-api.onrender.com/api/portfolio/website"; // NYEP API
         String thisApiUrl = "https://schedulerapi.onrender.com/api/scheduler"; // This service API
