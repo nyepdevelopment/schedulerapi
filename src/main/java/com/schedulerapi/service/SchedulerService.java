@@ -1,14 +1,11 @@
 package com.schedulerapi.service;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,10 +33,21 @@ public class SchedulerService {
 
     List<String> currentScheduledList = runtimeDataStore.getData("scheduled");
 
-    @Scheduled(cron = "0 */5 * * * *") // Cron expression for running every 5 minutes
+    @Scheduled(cron = "* */5 * * * *") // Cron expression for running every 5 minutes
     public void callApis() {
         String nyepApiUrl = "https://nyep-api.onrender.com/api/portfolio/website"; // NYEP API
         String thisApiUrl = "https://schedulerapi.onrender.com/api/scheduler"; // This service API
+
+        // Set date now
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss a");
+        LocalDateTime localDateTime = LocalDateTime.now();
+
+        // Set the timezone to Asia/Manila
+        ZoneId phZoneId = ZoneId.of("Asia/Manila");
+        ZonedDateTime phZonedDateTimeNow = localDateTime.atZone(phZoneId);
+
+        // Format the date-time now with the formatter
+        String formattedDateTimeNow = phZonedDateTimeNow.format(dateTimeFormatter);
 
         // Set headers (necessary for NYEP API)
         HttpHeaders headers = new HttpHeaders();
@@ -86,25 +94,15 @@ public class SchedulerService {
         String nyepApiStatusCode = nyepApiResponseEntity.getStatusCode().toString();
         String thisApiStatusCode = thisApiResponseEntity.getStatusCode().toString();
 
-        // If there are already schedules in the current schedule list, add all to new schedule list
+        // If there are already schedules in the current schedule list, add all to new
+        // schedule list
         if (currentScheduledList != null) {
             newScheduledList.addAll(currentScheduledList);
         }
 
-        // Set date now
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss a");
-        LocalDateTime localDateTime = LocalDateTime.now();
-
-        // Set the timezone to Asia/Manila
-        ZoneId phZoneId = ZoneId.of("Asia/Manila");
-        ZonedDateTime phZonedDateTime = localDateTime.atZone(phZoneId);
-
-        // Format the date-time with the formatter
-        String formattedDateTime = phZonedDateTime.format(dateTimeFormatter);
-
         // Add response to "schedule" runtime data store
         newScheduledList.add("NYEP API: " + nyepApiStatusCode + " " + "This API: " + thisApiStatusCode + " " + "Date: "
-                + formattedDateTime);
+                + formattedDateTimeNow);
 
         // Remove not todays schedules
         newScheduledList.removeIf(schedule -> {
@@ -113,18 +111,15 @@ public class SchedulerService {
             String dateTimePart = scheduleParts[1].trim();
             String datePart = dateTimePart.split(" ")[0];
 
-             // Get the date exactly 3 days ago
-            Calendar cal = Calendar.getInstance();
-            cal.add(Calendar.DATE, -3);
-            Date threeDaysAgo = cal.getTime();
+            DateTimeFormatter dateOnlyformatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            String formattedThreeDaysAgo = dateFormat.format(threeDaysAgo);
-
-            // Compare the extracted date with three days ago
-            boolean isThreeDaysAgo = datePart.equals(formattedThreeDaysAgo);
-
-            return !isThreeDaysAgo;
+            // Get date two days before today
+            String todayFormatted = phZonedDateTimeNow.minusDays(2).format(dateOnlyformatter);
+            
+            // Compare datePart with two days before formatted date
+            boolean isTwoDaysBefore = datePart.equals(todayFormatted);
+            
+            return isTwoDaysBefore;
         });
 
         runtimeDataStore.setData("scheduled", newScheduledList);
