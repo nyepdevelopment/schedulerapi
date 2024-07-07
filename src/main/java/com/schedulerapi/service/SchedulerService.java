@@ -31,10 +31,10 @@ public class SchedulerService {
          
     List<String> currentScheduledList = runtimeDataStore.getData("scheduled");
 
-    @Scheduled(cron = "0 */5 * * * *") // Cron expression for running every minute
+    @Scheduled(cron = "0 */5 * * * *") // Cron expression for running every 5 minutes
     public void execute() {
-        String nyepApiUrl = "https://nyep-api.onrender.com/api/portfolio/website";
-        String thisApiUrl = "https://springboot-rest-api-9len.onrender.com/api/users";
+        String nyepApiUrl = "https://nyep-api.onrender.com/api/portfolio/website"; // NYEP API
+        String thisApiUrl = "https://schedulerapi.onrender.com/api/users"; // This service API
 
         HttpHeaders headers = new HttpHeaders();
 
@@ -43,6 +43,7 @@ public class SchedulerService {
 
         HttpEntity<String> requestEntity = new HttpEntity<>(headers);
 
+        // Set error handlers
         nyepApiRestTemplate.setErrorHandler(new ResponseErrorHandler() {
             @Override
             public void handleError(ClientHttpResponse response) throws IOException {
@@ -67,18 +68,15 @@ public class SchedulerService {
             }
         });
 
-        // Make the HTTP GET request and store the response
+        // HTTP requests to APIs
         ResponseEntity<String> nyepApiResponseEntity = nyepApiRestTemplate.exchange(nyepApiUrl, HttpMethod.GET, requestEntity,
                 String.class);
 
-        // Make the HTTP GET request and store the response
         ResponseEntity<String> thisApiResponseEntity = thisApiRestTemplate.exchange(thisApiUrl, HttpMethod.GET, requestEntity,
         String.class);
 
         String nyepApiStatusCode = nyepApiResponseEntity.getStatusCode().toString();
         String thisApiStatusCode = thisApiResponseEntity.getStatusCode().toString();
-
-     
 
         if (currentScheduledList != null) {
             newScheduledList.addAll(currentScheduledList);
