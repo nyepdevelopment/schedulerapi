@@ -1,9 +1,13 @@
 package com.schedulerapi.service;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,14 +32,15 @@ public class SchedulerService {
     RuntimeDataStore runtimeDataStore = new RuntimeDataStore();
 
     List<String> newScheduledList = new ArrayList<>();
-         
+
     List<String> currentScheduledList = runtimeDataStore.getData("scheduled");
 
-    @Scheduled(cron = "0 */5 * * * *") // Cron expression for running every 5 minutes
-    public void execute() {
+    @Scheduled(cron = "*/5 * * * * *") // Cron expression for running every 5 minutes
+    public void callApis() {
         String nyepApiUrl = "https://nyep-api.onrender.com/api/portfolio/website"; // NYEP API
-        String thisApiUrl = "https://schedulerapi.onrender.com/api/users"; // This service API
+        String thisApiUrl = "https://schedulerapi.onrender.com/api/scheduler"; // This service API
 
+        // Set headers (necessary for NYEP API)
         HttpHeaders headers = new HttpHeaders();
 
         headers.set("Geolocation",
@@ -68,25 +73,54 @@ public class SchedulerService {
             }
         });
 
-        // HTTP requests to APIs
-        ResponseEntity<String> nyepApiResponseEntity = nyepApiRestTemplate.exchange(nyepApiUrl, HttpMethod.GET, requestEntity,
+        // HTTP GET requests to APIs
+        ResponseEntity<String> nyepApiResponseEntity = nyepApiRestTemplate.exchange(nyepApiUrl, HttpMethod.GET,
+                requestEntity,
                 String.class);
 
-        ResponseEntity<String> thisApiResponseEntity = thisApiRestTemplate.exchange(thisApiUrl, HttpMethod.GET, requestEntity,
-        String.class);
+        ResponseEntity<String> thisApiResponseEntity = thisApiRestTemplate.exchange(thisApiUrl, HttpMethod.GET,
+                requestEntity,
+                String.class);
 
         String nyepApiStatusCode = nyepApiResponseEntity.getStatusCode().toString();
         String thisApiStatusCode = thisApiResponseEntity.getStatusCode().toString();
 
+        // If there are already schedules in the current schedule list, add all to new schedule list
         if (currentScheduledList != null) {
             newScheduledList.addAll(currentScheduledList);
         }
 
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        // Set date now
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss a");
         LocalDateTime localDateTime = LocalDateTime.now();
-        String formattedDateTime = localDateTime.format(dateTimeFormatter);
-        
-        newScheduledList.add("NYEP API: " + nyepApiStatusCode + " " + "This API: " + thisApiStatusCode + " " + "Date: " + formattedDateTime);
+
+        // Set the timezone to Asia/Manila
+        ZoneId phZoneId = ZoneId.of("Asia/Manila");
+        ZonedDateTime phZonedDateTime = localDateTime.atZone(phZoneId);
+
+        // Format the date-time with the formatter
+        String formattedDateTime = phZonedDateTime.format(dateTimeFormatter);
+
+        // Add response to "schedule" runtime data store
+        newScheduledList.add("NYEP API: " + nyepApiStatusCode + " " + "This API: " + thisApiStatusCode + " " + "Date: "
+                + formattedDateTime);
+
+        // Remove not todays schedules
+        newScheduledList.removeIf(schedule -> {
+            // Get date from schedule string
+            String[] scheduleParts = schedule.split("Date: ");
+            String dateTimePart = scheduleParts[1].trim();
+            String datePart = dateTimePart.split(" ")[0];
+
+            // Get today's date
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            String today = dateFormat.format(new Date());
+
+            // Compare the extracted date from schedule string with today's date
+            boolean isToday = datePart.equals(today);
+
+            return !isToday;
+        });
 
         runtimeDataStore.setData("scheduled", newScheduledList);
     }

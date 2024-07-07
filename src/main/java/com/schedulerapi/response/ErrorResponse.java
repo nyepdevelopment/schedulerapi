@@ -30,11 +30,11 @@ public class ErrorResponse {
         this.message = message;
     }
 
-    public List<String> getDetails() {
+    public List<String> getErrors() {
         return errors;
     }
 
-    public void setDetails(List<String> errors) {
+    public void setErrors(List<String> errors) {
         this.errors = errors;
     }
 }
