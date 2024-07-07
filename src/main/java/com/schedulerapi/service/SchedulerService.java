@@ -52,24 +52,24 @@ public class SchedulerService {
         // Set error handlers
         nyepApiRestTemplate.setErrorHandler(new ResponseErrorHandler() {
             @Override
-            public void handleError(ClientHttpResponse response) throws IOException {
+            public void handleError(@SuppressWarnings("null") ClientHttpResponse response) throws IOException {
                 // do nothing
             }
 
             @Override
-            public boolean hasError(ClientHttpResponse response) throws IOException {
+            public boolean hasError(@SuppressWarnings("null") ClientHttpResponse response) throws IOException {
                 return false;
             }
         });
 
         thisApiRestTemplate.setErrorHandler(new ResponseErrorHandler() {
             @Override
-            public void handleError(ClientHttpResponse response) throws IOException {
+            public void handleError(@SuppressWarnings("null") ClientHttpResponse response) throws IOException {
                 // do nothing
             }
 
             @Override
-            public boolean hasError(ClientHttpResponse response) throws IOException {
+            public boolean hasError(@SuppressWarnings("null") ClientHttpResponse response) throws IOException {
                 return false;
             }
         });
