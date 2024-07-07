@@ -2,8 +2,6 @@ package com.schedulerapi.service;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,12 +40,8 @@ public class SchedulerService {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss a");
         LocalDateTime localDateTime = LocalDateTime.now();
 
-        // Set the timezone to Asia/Manila
-        ZoneId phZoneId = ZoneId.of("Asia/Manila");
-        ZonedDateTime phZonedDateTimeNow = localDateTime.atZone(phZoneId);
-
         // Format the date-time now with the formatter
-        String formattedDateTimeNow = phZonedDateTimeNow.format(dateTimeFormatter);
+        String formattedDateTimeNow = localDateTime.format(dateTimeFormatter);
 
         // Set headers (necessary for NYEP API)
         HttpHeaders headers = new HttpHeaders();
@@ -114,7 +108,7 @@ public class SchedulerService {
             DateTimeFormatter dateOnlyformatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
             // Get date two days before today
-            String todayFormatted = phZonedDateTimeNow.minusDays(2).format(dateOnlyformatter);
+            String todayFormatted = localDateTime.minusDays(2).format(dateOnlyformatter);
             
             // Compare datePart with two days before formatted date
             boolean isTwoDaysBefore = datePart.equals(todayFormatted);
