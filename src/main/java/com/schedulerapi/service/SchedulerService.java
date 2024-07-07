@@ -7,6 +7,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -35,7 +36,7 @@ public class SchedulerService {
 
     List<String> currentScheduledList = runtimeDataStore.getData("scheduled");
 
-    @Scheduled(cron = "*/5 * * * * *") // Cron expression for running every 5 minutes
+    @Scheduled(cron = "0 */5 * * * *") // Cron expression for running every 5 minutes
     public void callApis() {
         String nyepApiUrl = "https://nyep-api.onrender.com/api/portfolio/website"; // NYEP API
         String thisApiUrl = "https://schedulerapi.onrender.com/api/scheduler"; // This service API
@@ -112,14 +113,18 @@ public class SchedulerService {
             String dateTimePart = scheduleParts[1].trim();
             String datePart = dateTimePart.split(" ")[0];
 
-            // Get today's date
+             // Get the date exactly 3 days ago
+            Calendar cal = Calendar.getInstance();
+            cal.add(Calendar.DATE, -3);
+            Date threeDaysAgo = cal.getTime();
+
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            String today = dateFormat.format(new Date());
+            String formattedThreeDaysAgo = dateFormat.format(threeDaysAgo);
 
-            // Compare the extracted date from schedule string with today's date
-            boolean isToday = datePart.equals(today);
+            // Compare the extracted date with three days ago
+            boolean isThreeDaysAgo = datePart.equals(formattedThreeDaysAgo);
 
-            return !isToday;
+            return !isThreeDaysAgo;
         });
 
         runtimeDataStore.setData("scheduled", newScheduledList);
