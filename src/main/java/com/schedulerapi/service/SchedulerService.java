@@ -34,7 +34,7 @@ public class SchedulerService {
     @Scheduled(cron = "0 */15 * * * *") // Cron expression for running every 15 minutes
     public void callApis() {
         String nyepApiUrl = "https://nyep-api.onrender.com/api/portfolio/website"; // NYEP API
-        String thisApiUrl = "https://schedulerapi.onrender.com/api/scheduler"; // This service API
+        String thisApiUrl = "https://schedulerapi.onrender.com/api/logs"; // This service API
 
         // Set date now
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss a");
