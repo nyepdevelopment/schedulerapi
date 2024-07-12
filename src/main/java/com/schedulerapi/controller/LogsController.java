@@ -13,8 +13,8 @@ import com.schedulerapi.response.SuccessResponse;
 import com.schedulerapi.store.RuntimeDataStore;
 
 @RestController
-@RequestMapping("/api/scheduler")
-public class SchedulerController {
+@RequestMapping("/api/logs")
+public class LogsController {
     @Autowired
     RuntimeDataStore runtimeDataStore = new RuntimeDataStore();
 
