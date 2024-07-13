@@ -17,7 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
-import com.schedulerapi.store.RuntimeDataStore;
+import com.schedulerapi.constants.GlobalConstants;
+import com.schedulerapi.store.LogsDataStore;
 
 @Service
 public class SchedulerService {
@@ -25,13 +26,9 @@ public class SchedulerService {
     RestTemplate thisApiRestTemplate = new RestTemplate();
 
     @Autowired
-    RuntimeDataStore runtimeDataStore = new RuntimeDataStore();
+    LogsDataStore logsDataStore = new LogsDataStore();
 
-    List<String> newScheduledList = new ArrayList<>();
-
-    List<String> currentScheduledList = runtimeDataStore.getData("scheduled");
-
-    @Scheduled(cron = "0 */12 * * * *") // Cron expression for running every 12 minutes
+    @Scheduled(cron = GlobalConstants.API_CRON_EXPRESSION) // Cron expression for running every 10 minutes
     public void callApis() {
         String nyepApiUrl = "https://nyep-api.onrender.com/api/portfolio/website"; // NYEP API
         String thisApiUrl = "https://schedulerapi.onrender.com/api/logs"; // This service API
@@ -90,6 +87,9 @@ public class SchedulerService {
 
         // If there are already schedules in the current schedule list, add all to new
         // schedule list
+        List<String> newScheduledList = new ArrayList<>();
+        List<String> currentScheduledList = logsDataStore.getData("logs");
+
         if (currentScheduledList != null) {
             newScheduledList.addAll(currentScheduledList);
         }
@@ -116,6 +116,6 @@ public class SchedulerService {
             return isTwoDaysBefore;
         });
 
-        runtimeDataStore.setData("scheduled", newScheduledList);
+        logsDataStore.setData("logs", newScheduledList);
     }
 }

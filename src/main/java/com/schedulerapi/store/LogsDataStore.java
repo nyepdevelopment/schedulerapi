@@ -7,7 +7,7 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 @Component
-public class RuntimeDataStore {
+public class LogsDataStore {
     private final Map<String, List<String>> dataMap = new HashMap<>();
 
     public void setData(String key, List<String> value) {
